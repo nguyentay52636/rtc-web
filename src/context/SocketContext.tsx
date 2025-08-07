@@ -2,7 +2,7 @@
 
 import { OngoingCall, SocketUser } from "@/types";
 import { useUser } from "@clerk/nextjs";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 interface isSocketContext {
@@ -21,14 +21,24 @@ export const SocketContextProvider = ({ children }: { children: React.ReactNode 
     const [onlineUsers, setOnlineUsers] = useState<SocketUser[] | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [ongoingCall, setOngoingCall] = useState<OngoingCall | null>(null);
+    const currentSocketUser = useMemo(() => {
+        return onlineUsers?.find((u) => u.userId === user?.id) || null;
+    }, [onlineUsers, user])
     const handleCall = useCallback((targetUserId: string) => {
-        if (!socket || !user) return;
-        socket.emit('callUser', { callerId: user.id, receiverId: targetUserId })
-    }, [socket, user])
-    const handleAnswerCall = useCallback(({ isAccepted }: { isAccepted: boolean }) => {
-        if (!socket || !user) return;
-        socket.emit('answerCall', { callerId: user.id, isAccepted })
-    }, [socket, user])
+        //     if (!socket || !user) return;
+        //     socket.emit('callUser', { callerId: user.id, receiverId: targetUserId })
+        // }, [socket, user])
+        // const handleAnswerCall = useCallback(({ isAccepted }: { isAccepted: boolean }) => {
+        //     if (!socket || !user) return;
+        //     socket.emit('answerCall', { callerId: user.id, isAccepted })
+        const participants = useCallback((caller: SocketUser, receiver: SocketUser) => {
+            if (!caller || !receiver) return null;
+            return {
+                caller: caller,
+                receiver: receiver
+            }
+        }, [currentSocketUser, onlineUsers, targetUserId])
+    }, [socket, currentSocketUser, ongoingCall])
 
     useEffect(() => {
         if (!isLoaded) {
