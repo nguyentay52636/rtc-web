@@ -4,4 +4,6 @@ const ClerkLayout = ({ children }: { children: React.ReactNode }) => {
             {children}
         </div>
     )
-} 
+}
+
+export default ClerkLayout; 

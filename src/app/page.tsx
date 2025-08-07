@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import SocketTest from '@/components/SocketTest'
 import {
   Phone,
   Video,
@@ -284,6 +285,9 @@ export default function VideoPage() {
           </div>
         </div>
       </div>
+
+      {/* Socket Test Component */}
+      <SocketTest />
     </div>
   )
 }

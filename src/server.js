@@ -13,8 +13,37 @@ app.prepare().then(() => {
   const httpServer = createServer(handler);
 
   const io = new Server(httpServer);
+  let onlineUsers = []
+
 
   io.on("connection", (socket) => {
+    console.log("User connected:", socket.id);
+    
+    //add user 
+     socket.on('addNewUser',(clerkUser)=> { 
+       console.log("Adding new user:", clerkUser);
+       if (clerkUser && !onlineUsers.some(user => user?.userId === clerkUser.id)) {
+         onlineUsers.push({
+           userId: clerkUser.id,
+           socketId: socket.id,
+           profile: clerkUser
+         });
+         console.log("Online users:", onlineUsers);
+         io.emit('getUsers', onlineUsers);
+       }
+     })
+
+     socket.on('disconnect',()=> { 
+       console.log("User disconnected:", socket.id);
+       onlineUsers = onlineUsers.filter(user => user.socketId !== socket.id);
+       io.emit('getUsers', onlineUsers);
+     })
+
+     // Test event handler
+     socket.on('test', (message) => {
+       console.log('Received test message from client:', message);
+       socket.emit('test', 'Hello from server!');
+     })
     // ...
   });
 

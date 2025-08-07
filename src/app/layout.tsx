@@ -3,7 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import NavBar from "@/components/layout/NavBar";
-import SocketProvider from "@/provider/socketProvider";
+import SocketProvider from "@/provider/SocketProvider";
+import AuthCheck from "@/components/AuthCheck";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,12 +32,12 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen`}
         >
-          <SocketProvider>
-            <NavBar />
-            <main>
+          <AuthCheck>
+            <SocketProvider>
+              <NavBar />
               {children}
-            </main>
-          </SocketProvider>
+            </SocketProvider>
+          </AuthCheck>
         </body>
       </html>
     </ClerkProvider>
