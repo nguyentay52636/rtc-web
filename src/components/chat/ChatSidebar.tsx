@@ -4,6 +4,7 @@ import ParticipantsList from './ParticipantsList'
 import ChatMessages from './ChatMessages'
 import ChatInput from './ChatInput'
 import { ChatSidebarProps } from '@/types/chat'
+import ListOnlineUsers from '../ListOnlineUsers'
 
 export default function ChatSidebar({
     participantCount = 3,
@@ -14,6 +15,7 @@ export default function ChatSidebar({
             <div className="flex flex-col h-full">
                 <ChatHeader participantCount={participantCount} />
                 <ParticipantsList />
+                <ListOnlineUsers />
                 <ChatMessages />
                 <ChatInput onSendMessage={onSendMessage} />
             </div>

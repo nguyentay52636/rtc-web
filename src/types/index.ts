@@ -5,3 +5,12 @@ export interface SocketUser {
     socketId : string;
     profile : User;
  }
+export interface OngoingCall  { 
+    partcipants : Participants;
+    createdAt : Date;
+    updatedAt : Date;
+}
+export interface Participants { 
+    caller : SocketUser;
+    receiver : SocketUser;
+}

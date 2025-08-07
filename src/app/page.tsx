@@ -11,7 +11,7 @@ export default function VideoPage() {
     // TODO: Implement message sending logic
   }
 
-  return (
+return (
     <div className="flex h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <VideoArea
         meetingTitle="Team Meeting"

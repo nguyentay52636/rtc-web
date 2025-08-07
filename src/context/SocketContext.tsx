@@ -1,8 +1,8 @@
 "use client";
 
-import { SocketUser } from "@/types";
+import { OngoingCall, SocketUser } from "@/types";
 import { useUser } from "@clerk/nextjs";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 interface isSocketContext {
@@ -20,6 +20,15 @@ export const SocketContextProvider = ({ children }: { children: React.ReactNode 
     const [socket, setSocket] = useState<Socket | null>(null);
     const [onlineUsers, setOnlineUsers] = useState<SocketUser[] | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [ongoingCall, setOngoingCall] = useState<OngoingCall | null>(null);
+    const handleCall = useCallback((targetUserId: string) => {
+        if (!socket || !user) return;
+        socket.emit('callUser', { callerId: user.id, receiverId: targetUserId })
+    }, [socket, user])
+    const handleAnswerCall = useCallback(({ isAccepted }: { isAccepted: boolean }) => {
+        if (!socket || !user) return;
+        socket.emit('answerCall', { callerId: user.id, isAccepted })
+    }, [socket, user])
 
     useEffect(() => {
         if (!isLoaded) {
