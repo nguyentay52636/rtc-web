@@ -4,7 +4,7 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import NavBar from "@/components/layout/NavBar";
 import SocketProvider from "@/provider/SocketProvider";
-import AuthCheck from "@/components/AuthCheck";
+// import AuthCheck from "@/components/AuthCheck";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,12 +32,12 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen`}
         >
-          <AuthCheck>
-            <SocketProvider>
-              <NavBar />
-              {children}
-            </SocketProvider>
-          </AuthCheck>
+
+          <SocketProvider>
+            <NavBar />
+            {children}
+          </SocketProvider>
+
         </body>
       </html>
     </ClerkProvider>

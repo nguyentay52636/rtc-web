@@ -1,3 +1,5 @@
+"use client";
+
 import { SocketUser } from "@/types";
 import { useUser } from "@clerk/nextjs";
 import { createContext, useContext, useEffect, useState } from "react";
