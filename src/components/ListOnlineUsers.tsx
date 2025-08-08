@@ -1,21 +1,48 @@
 import { useSocket } from '@/context/SocketContext'
 import { useVideoCall } from '@/context/VideoCallContext'
+import { useAudioCall } from '@/context/AudioCallContext'
 import { useUser } from '@clerk/nextjs'
 import React, { useState } from 'react'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Phone, Video } from 'lucide-react'
 import CallNotification from './notification/CallNotification'
+import AudioCallNotification from './notification/AudioCallNotification'
+import CallEndedNotification from './notification/CallEndedNotification'
 import VideoCall from './video/VideoCall'
 
 export default function ListOnlineUsers() {
     const { onlineUsers } = useSocket()
     const { user } = useUser()
-    const { startVideoCall, callStatus } = useVideoCall()
-    const [incomingCall, setIncomingCall] = useState<any>(null)
+    const { startVideoCall, callStatus: videoCallStatus } = useVideoCall()
+    const {
+        startAudioCall,
+        acceptCall,
+        rejectCall,
+        endCall,
+        callStatus: audioCallStatus,
+        callDuration,
+        incomingCall,
+        showIncomingCall,
+        targetUser,
+        callerUser,
+        isInCall,
+        isCaller,
+        isReceiver
+    } = useAudioCall()
+    const [incomingVideoCall, setIncomingVideoCall] = useState<any>(null)
+    const [callEndedInfo, setCallEndedInfo] = useState<{
+        callerInfo: any;
+        duration: number;
+        isVisible: boolean;
+    } | null>(null)
 
-    const handleCallUser = (targetUserId: string) => {
-        // TODO: Replace with real call logic
-        alert(`Gọi tới userId: ${targetUserId}`)
+    const handleCallUser = async (targetUserId: string) => {
+        try {
+            await startAudioCall(targetUserId)
+        } catch (error) {
+            console.error('Failed to start audio call:', error)
+            alert('Không thể bắt đầu cuộc gọi thoại')
+        }
     }
 
     const handleVideoCallUser = async (targetUserId: string) => {
@@ -27,23 +54,56 @@ export default function ListOnlineUsers() {
         }
     }
 
-    const handleAcceptCall = () => {
-        console.log('Chấp nhận cuộc gọi từ:', incomingCall?.callerInfo?.profile?.fullName)
-        setIncomingCall(null)
-        // Thêm logic xử lý cuộc gọi ở đây
+    const handleAcceptVideoCall = () => {
+        console.log('Chấp nhận cuộc gọi video từ:', incomingVideoCall?.callerInfo?.profile?.fullName)
+        setIncomingVideoCall(null)
+        // Thêm logic xử lý cuộc gọi video ở đây
     }
 
-    const handleRejectCall = () => {
-        console.log('Từ chối cuộc gọi từ:', incomingCall?.callerInfo?.profile?.fullName)
-        setIncomingCall(null)
-        // Thêm logic từ chối cuộc gọi ở đây
+    const handleRejectVideoCall = () => {
+        console.log('Từ chối cuộc gọi video từ:', incomingVideoCall?.callerInfo?.profile?.fullName)
+        setIncomingVideoCall(null)
+        // Thêm logic từ chối cuộc gọi video ở đây
     }
 
-    // Simulate incoming call for demo
-    const simulateIncomingCall = () => {
+    const handleAcceptAudioCall = async () => {
+        try {
+            await acceptCall()
+        } catch (error) {
+            console.error('Failed to accept audio call:', error)
+            alert('Không thể chấp nhận cuộc gọi')
+        }
+    }
+
+    const handleRejectAudioCall = () => {
+        rejectCall()
+    }
+
+    const handleEndAudioCall = () => {
+        const currentCaller = isCaller ? targetUser : callerUser
+        const duration = callDuration
+
+        endCall()
+
+        // Show call ended notification
+        if (currentCaller) {
+            setCallEndedInfo({
+                callerInfo: currentCaller,
+                duration,
+                isVisible: true
+            })
+        }
+    }
+
+    const handleCloseCallEndedNotification = () => {
+        setCallEndedInfo(null)
+    }
+
+    // Simulate incoming video call for demo
+    const simulateIncomingVideoCall = () => {
         const mockCaller = onlineUsers?.[0]
         if (mockCaller) {
-            setIncomingCall({
+            setIncomingVideoCall({
                 callerInfo: {
                     userId: mockCaller.userId,
                     profile: mockCaller.profile
@@ -70,9 +130,14 @@ export default function ListOnlineUsers() {
                             </Avatar>
                             <div className="flex-1">
                                 <p className="text-gray-900 text-sm font-medium">{u.profile.fullName}</p>
-                                {callStatus === 'calling' && u.userId === u.userId && (
-                                    <p className="text-blue-600 text-xs">Đang gọi...</p>
-                                )}
+                                {(videoCallStatus === 'calling' || audioCallStatus === 'calling') &&
+                                    (u.userId === (isCaller ? targetUser?.userId : callerUser?.userId)) && (
+                                        <p className="text-blue-600 text-xs">Đang gọi...</p>
+                                    )}
+                                {audioCallStatus === 'connected' &&
+                                    (u.userId === (isCaller ? targetUser?.userId : callerUser?.userId)) && (
+                                        <p className="text-green-600 text-xs">Đang nói chuyện...</p>
+                                    )}
                             </div>
                             {user?.id !== u.userId && (
                                 <div className="flex gap-2">
@@ -80,6 +145,8 @@ export default function ListOnlineUsers() {
                                         className="p-2 rounded-full hover:bg-blue-100 transition-colors"
                                         onClick={() => handleCallUser(u.userId)}
                                         title="Gọi thoại"
+                                        disabled={audioCallStatus === 'calling' || audioCallStatus === 'ringing' || audioCallStatus === 'connected' ||
+                                            videoCallStatus === 'calling' || videoCallStatus === 'ringing' || videoCallStatus === 'connected'}
                                     >
                                         <Phone className="w-5 h-5 text-blue-600" />
                                     </button>
@@ -87,7 +154,8 @@ export default function ListOnlineUsers() {
                                         className="p-2 rounded-full hover:bg-green-100 transition-colors"
                                         onClick={() => handleVideoCallUser(u.userId)}
                                         title="Gọi video"
-                                        disabled={callStatus === 'calling' || callStatus === 'ringing'}
+                                        disabled={audioCallStatus === 'calling' || audioCallStatus === 'ringing' || audioCallStatus === 'connected' ||
+                                            videoCallStatus === 'calling' || videoCallStatus === 'ringing' || videoCallStatus === 'connected'}
                                     >
                                         <Video className="w-5 h-5 text-green-600" />
                                     </button>
@@ -97,26 +165,57 @@ export default function ListOnlineUsers() {
                     ))}
                 </div>
 
-                {/* Demo button for incoming call */}
+                {/* Demo buttons */}
                 {onlineUsers && onlineUsers.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
                         <button
-                            onClick={simulateIncomingCall}
+                            onClick={simulateIncomingVideoCall}
                             className="w-full p-3 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium"
                         >
-                            🎭 Demo: Giả lập cuộc gọi đến
+                            🎭 Demo: Giả lập cuộc gọi video đến
                         </button>
                     </div>
                 )}
             </div>
 
-            {/* Call Notification */}
+            {/* Video Call Notification */}
             <CallNotification
-                callerInfo={incomingCall?.callerInfo}
-                onAccept={handleAcceptCall}
-                onReject={handleRejectCall}
-                isVisible={!!incomingCall}
+                callerInfo={incomingVideoCall?.callerInfo}
+                onAccept={handleAcceptVideoCall}
+                onReject={handleRejectVideoCall}
+                isVisible={!!incomingVideoCall}
             />
+
+            {/* Audio Call Notification */}
+            <AudioCallNotification
+                callerInfo={incomingCall?.callerInfo}
+                onAccept={handleAcceptAudioCall}
+                onReject={handleRejectAudioCall}
+                isVisible={showIncomingCall}
+                callDuration={callDuration}
+                isIncoming={true}
+            />
+
+            {/* Ongoing Audio Call */}
+            {isInCall && (isCaller ? targetUser : callerUser) && (
+                <AudioCallNotification
+                    callerInfo={isCaller ? targetUser : callerUser}
+                    onReject={handleEndAudioCall}
+                    isVisible={true}
+                    callDuration={callDuration}
+                    isIncoming={false}
+                />
+            )}
+
+            {/* Call Ended Notification */}
+            {callEndedInfo && (
+                <CallEndedNotification
+                    callerInfo={callEndedInfo.callerInfo}
+                    callDuration={callEndedInfo.duration}
+                    isVisible={callEndedInfo.isVisible}
+                    onClose={handleCloseCallEndedNotification}
+                />
+            )}
 
             {/* Video Call Component */}
             <VideoCall />

@@ -92,6 +92,47 @@ app.prepare().then(() => {
        }
      });
 
+     // Audio Call Events
+     socket.on('audio-call', (data) => {
+       console.log('Audio call initiated:', data);
+       const receiver = onlineUsers.find(user => user.userId === data.targetUserId);
+       if (receiver) {
+         io.to(receiver.socketId).emit('incoming-audio-call', {
+           callerInfo: data.callerInfo,
+         });
+       }
+     });
+
+     socket.on('audio-call-accepted', (data) => {
+       console.log('Audio call accepted:', data);
+       const caller = onlineUsers.find(user => user.userId === data.targetUserId);
+       if (caller) {
+         io.to(caller.socketId).emit('audio-call-accepted', {
+           receiverInfo: data.receiverInfo,
+         });
+       }
+     });
+
+     socket.on('audio-call-rejected', (data) => {
+       console.log('Audio call rejected:', data);
+       const caller = onlineUsers.find(user => user.userId === data.targetUserId);
+       if (caller) {
+         io.to(caller.socketId).emit('audio-call-rejected', {
+           targetUserId: data.targetUserId,
+         });
+       }
+     });
+
+     socket.on('audio-call-ended', (data) => {
+       console.log('Audio call ended:', data);
+       const targetUser = onlineUsers.find(user => user.userId === data.targetUserId);
+       if (targetUser) {
+         io.to(targetUser.socketId).emit('audio-call-ended', {
+           callDuration: data.callDuration,
+         });
+       }
+     });
+
      // Test event handler
      socket.on('test', (message) => {
        console.log('Received test message from client:', message);

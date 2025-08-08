@@ -23,8 +23,8 @@ export default function VideoPage() {
         participantCount={3}
         onSendMessage={handleSendMessage}
       />
-      <SocketTest />
-      <VideoCallTest />
+      {/* <SocketTest /> */}
+      {/* <VideoCallTest /> */}
     </div>
   )
 }
