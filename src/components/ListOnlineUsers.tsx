@@ -1,18 +1,30 @@
 import { useSocket } from '@/context/SocketContext'
+import { useVideoCall } from '@/context/VideoCallContext'
 import { useUser } from '@clerk/nextjs'
 import React, { useState } from 'react'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Phone } from 'lucide-react'
+import { Phone, Video } from 'lucide-react'
 import CallNotification from './notification/CallNotification'
+import VideoCall from './video/VideoCall'
 
 export default function ListOnlineUsers() {
     const { onlineUsers } = useSocket()
     const { user } = useUser()
+    const { startVideoCall, callStatus } = useVideoCall()
     const [incomingCall, setIncomingCall] = useState<any>(null)
 
     const handleCallUser = (targetUserId: string) => {
         // TODO: Replace with real call logic
         alert(`Gọi tới userId: ${targetUserId}`)
+    }
+
+    const handleVideoCallUser = async (targetUserId: string) => {
+        try {
+            await startVideoCall(targetUserId)
+        } catch (error) {
+            console.error('Failed to start video call:', error)
+            alert('Không thể bắt đầu cuộc gọi video')
+        }
     }
 
     const handleAcceptCall = () => {
@@ -58,15 +70,28 @@ export default function ListOnlineUsers() {
                             </Avatar>
                             <div className="flex-1">
                                 <p className="text-gray-900 text-sm font-medium">{u.profile.fullName}</p>
+                                {callStatus === 'calling' && u.userId === u.userId && (
+                                    <p className="text-blue-600 text-xs">Đang gọi...</p>
+                                )}
                             </div>
                             {user?.id !== u.userId && (
-                                <button
-                                    className="p-2 rounded-full hover:bg-blue-100 transition-colors"
-                                    onClick={() => handleCallUser(u.userId)}
-                                    title="Gọi người này"
-                                >
-                                    <Phone className="w-5 h-5 text-blue-600" />
-                                </button>
+                                <div className="flex gap-2">
+                                    <button
+                                        className="p-2 rounded-full hover:bg-blue-100 transition-colors"
+                                        onClick={() => handleCallUser(u.userId)}
+                                        title="Gọi thoại"
+                                    >
+                                        <Phone className="w-5 h-5 text-blue-600" />
+                                    </button>
+                                    <button
+                                        className="p-2 rounded-full hover:bg-green-100 transition-colors"
+                                        onClick={() => handleVideoCallUser(u.userId)}
+                                        title="Gọi video"
+                                        disabled={callStatus === 'calling' || callStatus === 'ringing'}
+                                    >
+                                        <Video className="w-5 h-5 text-green-600" />
+                                    </button>
+                                </div>
                             )}
                         </div>
                     ))}
@@ -92,6 +117,9 @@ export default function ListOnlineUsers() {
                 onReject={handleRejectCall}
                 isVisible={!!incomingCall}
             />
+
+            {/* Video Call Component */}
+            <VideoCall />
         </>
     )
 }

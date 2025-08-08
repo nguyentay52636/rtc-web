@@ -1,5 +1,6 @@
 "use client"
 import { SocketContextProvider } from "@/context/SocketContext"
+import { VideoCallProvider } from "@/context/VideoCallContext"
 import { useUser } from "@clerk/nextjs"
 
 const SocketProvider = ({ children }: { children: React.ReactNode }) => {
@@ -12,7 +13,9 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
     return (
         <SocketContextProvider>
-            {children}
+            <VideoCallProvider>
+                {children}
+            </VideoCallProvider>
         </SocketContextProvider>
     )
 }

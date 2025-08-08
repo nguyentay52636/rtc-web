@@ -4,6 +4,7 @@ import React from 'react'
 import VideoArea from '@/components/video/VideoArea'
 import ChatSidebar from '@/components/chat/ChatSidebar'
 import SocketTest from '@/components/SocketTest'
+import VideoCallTest from '@/components/VideoCallTest'
 
 export default function VideoPage() {
   const handleSendMessage = (message: string) => {
@@ -11,7 +12,7 @@ export default function VideoPage() {
     // TODO: Implement message sending logic
   }
 
-return (
+  return (
     <div className="flex h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <VideoArea
         meetingTitle="Team Meeting"
@@ -23,6 +24,7 @@ return (
         onSendMessage={handleSendMessage}
       />
       <SocketTest />
+      <VideoCallTest />
     </div>
   )
 }
